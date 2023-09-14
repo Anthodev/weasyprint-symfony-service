@@ -27,6 +27,17 @@ RUN apk add --no-cache \
 		git \
 	;
 
+# add packages necessary for weasyprint
+RUN apk add --no-cache \
+		py3-pip \
+		py3-pillow \
+		py3-cffi \
+		py3-brotli \
+		gcc \
+		musl-dev \
+		python3-dev pango \
+    ;
+
 # php extensions installer: https://github.com/mlocati/docker-php-extension-installer
 COPY --from=php_extension_installer_upstream --link /usr/bin/install-php-extensions /usr/local/bin/
 
@@ -40,6 +51,8 @@ RUN set -eux; \
 
 ###> recipes ###
 ###< recipes ###
+
+RUN pip install weasyprint
 
 COPY --link docker/php/conf.d/app.ini $PHP_INI_DIR/conf.d/
 
@@ -67,8 +80,18 @@ COPY --from=composer_upstream --link /composer /usr/bin/composer
 # Dev PHP image
 FROM php_base AS php_dev
 
-ENV APP_ENV=dev XDEBUG_MODE=off
+ENV APP_ENV=dev
+ENV XDEBUG_MODE=off
+ENV UID=${USER_ID:-1000}
+ENV GID=${GROUP_ID:-1000}
+
 VOLUME /srv/app/var/
+
+RUN apk add --no-cache \
+		bash \
+		curl \
+		shadow \
+	;
 
 RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 
@@ -77,7 +100,19 @@ RUN set -eux; \
     	xdebug \
     ;
 
+RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.alpine.sh' | bash
+RUN apk add symfony-cli
+
 COPY --link docker/php/conf.d/app.dev.ini $PHP_INI_DIR/conf.d/
+
+RUN usermod -u ${UID} www-data
+RUN groupmod -g ${GID} www-data
+
+RUN rm -rf /srv/app/* && chown ${UID}:${GID} -R /srv/app
+
+RUN echo 'alias sf="php bin/console"' >> ~/.bashrc
+RUN echo 'alias phpunit="php vendor/bin/simple-phpunit"' >> ~/.bashrc
+RUN echo 'alias stan="php vendor/bin/phpstan"' >> ~/.bashrc
 
 # Prod PHP image
 FROM php_base AS php_prod

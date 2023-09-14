@@ -21,7 +21,8 @@
 docs/
 public/bundles/
 tests/
-var/
+var/cache/
+var/log/
 vendor/
 .editorconfig
 .env.*.local
