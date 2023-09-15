@@ -17,7 +17,7 @@ FROM php_upstream AS php_base
 
 WORKDIR /srv/app
 
-# persistent / runtime deps
+# persistent / runtime / weasyprint deps
 # hadolint ignore=DL3018
 RUN apk add --no-cache \
 		acl \
@@ -25,10 +25,6 @@ RUN apk add --no-cache \
 		file \
 		gettext \
 		git \
-	;
-
-# add packages necessary for weasyprint
-RUN apk add --no-cache \
 		py3-pip \
 		py3-pillow \
 		py3-cffi \
@@ -52,7 +48,7 @@ RUN set -eux; \
 ###> recipes ###
 ###< recipes ###
 
-RUN pip install weasyprint
+RUN pip install --no-cache-dir weasyprint
 
 COPY --link docker/php/conf.d/app.ini $PHP_INI_DIR/conf.d/
 
@@ -97,11 +93,11 @@ RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 
 RUN set -eux; \
 	install-php-extensions \
-    	xdebug \
+		xdebug \
     ;
 
 RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.alpine.sh' | bash
-RUN apk add symfony-cli
+RUN apk add symfony-cli --no-cache
 
 COPY --link docker/php/conf.d/app.dev.ini $PHP_INI_DIR/conf.d/
 
