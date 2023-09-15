@@ -46,7 +46,7 @@ jobs:
         run: curl -vk -o /dev/null https://localhost
       -
         name: Run PHPUnit
-        run: docker compose exec -T php bin/phpunit
+        run: docker compose exec -T php vendor/bin/phpunit
   lint:
     name: Docker Lint
     runs-on: ubuntu-latest
