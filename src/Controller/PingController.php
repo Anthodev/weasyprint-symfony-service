@@ -12,6 +12,12 @@ use Symfony\Component\Routing\Annotation\Route;
 #[AsController]
 class PingController
 {
+    #[Route(path: '/', methods: [Request::METHOD_GET])]
+    public function index(): JsonResponse
+    {
+        return new JsonResponse();
+    }
+
     #[Route(path: '/ping', methods: [Request::METHOD_GET])]
     public function ping(): JsonResponse
     {

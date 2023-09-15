@@ -4,21 +4,18 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use InvalidArgumentException;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 
 readonly class HtmlTransformer
 {
-    public function __construct()
-    {
-    }
-
     public function transformToPdf(
         string $html,
         string $filename,
     ): void {
-        if (!strip_tags($html)) {
-            throw new \InvalidArgumentException('data is not html code');
+        if ($html === strip_tags($html)) {
+            throw new InvalidArgumentException('data is not html code');
         }
 
         $filesystem = new Filesystem();
@@ -36,8 +33,10 @@ readonly class HtmlTransformer
             cwd: sys_get_temp_dir(),
         );
 
+        $this->deleteHtmlFile($filename);
+
         if (false === $isTransformed) {
-            throw new \InvalidArgumentException('Error during transformation');
+            throw new InvalidArgumentException('Error during transformation');
         }
     }
 
@@ -62,5 +61,14 @@ readonly class HtmlTransformer
         )) {
             throw new IOException('Error creating file');
         }
+    }
+
+    private function deleteHtmlFile(string $filename): void
+    {
+        $filesystem = new Filesystem();
+
+        $filesystem->remove(
+            sys_get_temp_dir() . '/' . $filename . '.html',
+        );
     }
 }
